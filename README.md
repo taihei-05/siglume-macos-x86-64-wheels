@@ -44,6 +44,14 @@ Mach-O file: the wheel's tag, only the `x86_64` architecture, a minimum macOS of
 and that `cryptography` reports the expected OpenSSL version. Upstream's `cryptography` test suite is run against the
 built wheel, because upstream no longer tests Intel Macs.
 
+`compare_wheels.py` compares two sets of wheels of the same names and writes a JSON report: for each wheel, the files
+whose bytes differ and, for each Mach-O file, the sections and the UUID that differ. It makes no pass or fail decision;
+its exit status does not depend on the differences it finds. `publish_wheels.sh` is the script that created the four
+releases of 2026-11-05: it holds their tags, wheel SHA-256 values and release notes, never uses `--clobber`, and
+downloads each asset again without authentication to check its SHA-256. The script itself does not check whether a tag
+exists; if it is run again, `gh release create` refuses the first tag, which already exists, and the script stops there.
+The comments in the scripts are in Japanese.
+
 Builds are not guaranteed to be byte-identical. What a consumer should pin is the SHA-256 of the release asset. What was
 observed when the same versions were built twice, in two different build folders: the `cbor2`, `ckzg` and
 `argon2-cffi-bindings` binaries were byte-identical and the wheels differed only in the timestamps inside the zip
@@ -53,6 +61,15 @@ builds differ in that one line). The UUID of the binary also differed; its cause
 by design (it holds a timestamp and a serial number). Two
 earlier `ckzg` builds of the same version, made in two different folders before the build linked without debug symbol
 entries (and with the build folder's path still in the binary), differed only in the UUID of the binary and in `RECORD`.
+
+## Where the scripts come from
+
+The five scripts in this repository are byte-for-byte copies of `scripts/release/macos_x86_64_wheels/` in the Siglume
+project's development repository (not public) at commit `cfd912e0c715c222d3789b9fb934a2f9bfcf5fa3`. The four releases of
+2026-11-05 were built before these scripts were in that repository's main branch, by scripts with the same bytes. A
+rebuild from the main branch had the same file list as the published wheels and the same machine code (`__TEXT,__text`)
+in every Mach-O file; the other differences are the ones described above (the `built on:` line and the UUID in
+`cryptography`, the SBOM, `RECORD` and the zip timestamps).
 
 ## Releases
 
